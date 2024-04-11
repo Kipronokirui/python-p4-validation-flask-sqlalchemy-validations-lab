@@ -12,7 +12,25 @@ class Author(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     # Add validators 
-
+    @validates('phone_number')
+    def validate_phone_number(self, key, phone_number):
+        if phone_number and len(phone_number) != 10:
+            raise ValueError("Phone number must be exactly 10 digits")
+        
+        # Check if phone number is purely numeric 
+        if not phone_number.isnumeric():
+            raise ValueError('Phone number should be numeric')
+        return phone_number
+    
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError('Author name must not be empty')
+        
+        if Author.query.filter_by(name=name).first() is not None:
+            raise ValueError('Another author with this name already exists.')
+        return name
+    
     def __repr__(self):
         return f'Author(id={self.id}, name={self.name})'
 
@@ -28,7 +46,29 @@ class Post(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     # Add validators  
-
+    @validates('content')
+    def validate_content_length(self, key, content):
+        if len(content) <250:
+            raise ValueError("conent must be more than 250 words")
+        return content
+    
+    @validates('summary')
+    def validate_summary(self, key, summary):
+        if len(summary) > 250:
+            raise ValueError("summary must be more that 250 words")
+        return summary
+    
+    @validates ('category')
+    def validate_category(self, key, category):
+        if category not in ['Fiction', 'Non-Fiction']:
+            raise ValueError('category must be either fiction or non viction')
+        return category
+    
+    @validates('title')
+    def validate_title(self, key, title):
+        if not any(keyword in title for keyword in ["Won\'t Believe", "Secret", "Top", "Guess"]):
+            raise ValueError("heading must be within the specified keywords")
+        return title
 
     def __repr__(self):
         return f'Post(id={self.id}, title={self.title} content={self.content}, summary={self.summary})'
